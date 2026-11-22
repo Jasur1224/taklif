@@ -504,6 +504,14 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
 };
 
+// Qayta boshlash: bu raqam o'zgartirilsa, barcha qurilmalardagi saqlangan holat
+// (qurilma kodi, tashriflar soni, "Ha, menman") o'chiriladi va hammasi 0 dan boshlanadi
+const RESET_VERSION = "2";
+if (store.get('resetVersion') !== RESET_VERSION) {
+  try { localStorage.clear(); } catch (e) {}
+  store.set('resetVersion', RESET_VERSION);
+}
+
 // Har bir qurilma doimiy kod oladi — shu qurilmada qayta ochilsa ham o'sha kod
 let deviceId = store.get('deviceId');
 const isNewDevice = !deviceId;
