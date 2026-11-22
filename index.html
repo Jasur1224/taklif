@@ -124,13 +124,92 @@
   .choices .btn { width: 100%; }
 
   /* "Yo'q" ustidagi health bar */
-  .hp, .hp-spacer { height: 12px; }
+  /* Choy piyolasi o'lchagichi */
+  .meter { display: flex; align-items: center; gap: 8px; }
+  .meter.hit { animation: hit 0.35s; }
+  .cup { width: 34px; height: 31px; flex: 0 0 34px; overflow: visible; }
+  .cup-line { fill: none; stroke: var(--text); stroke-width: 2; stroke-linejoin: round; opacity: 0.75; }
+  .tea { fill: var(--tea, #b5652f); transition: transform 0.6s ease, fill 0.6s ease; }
+  .steam path {
+    fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round;
+    animation: steam 2.4s ease-in-out infinite;
+    transition: opacity 0.6s;
+  }
+  .steam path:nth-child(2) { animation-delay: 0.4s; }
+  .steam path:nth-child(3) { animation-delay: 0.8s; }
+  @keyframes steam {
+    0% { transform: translateY(2px); opacity: 0; }
+    40% { opacity: 0.8; }
+    100% { transform: translateY(-4px); opacity: 0; }
+  }
+  .steam.off path { animation: none; opacity: 0; }
+  .meter-info { flex: 1; min-width: 0; }
+  .meter-label {
+    display: flex; justify-content: space-between; gap: 6px;
+    font-size: 12px; color: var(--muted); margin-bottom: 4px; white-space: nowrap;
+  }
+  .meter-label span:first-child { overflow: hidden; text-overflow: ellipsis; }
+  #meterPct { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* Suhbat pufakchasi */
+  .chat { margin: 6px 0 4px; min-height: 76px; }
+  .bubble {
+    display: inline-block;
+    max-width: 92%;
+    background: var(--soft);
+    border-radius: 18px 18px 18px 4px;
+    padding: 12px 16px;
+    font-size: 16.5px;
+    line-height: 1.55;
+  }
+  .typing { display: inline-flex; gap: 4px; padding: 6px 2px; }
+  .typing i {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+    animation: blink 1.2s infinite ease-in-out;
+  }
+  .typing i:nth-child(2) { animation-delay: 0.2s; }
+  .typing i:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+  .bubble-meta { font-size: 12px; color: var(--muted); margin: 5px 0 0 6px; min-height: 16px; }
+  .answer.waiting { opacity: 0; pointer-events: none; }
+  .answer { transition: opacity 0.5s ease; }
+
+  /* Uchrashuv chiptasi */
+  .ticket { display: none; margin: 6px 0 12px; filter: drop-shadow(0 6px 14px rgba(60, 40, 30, 0.10)); }
+  .ticket.show { display: block; animation: rise 0.6s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .ticket-top, .ticket-bottom { background: #fff; padding: 16px 18px; }
+  .ticket-top { border-radius: 14px 14px 0 0; border-bottom: none; }
+  .ticket-bottom { border-radius: 0 0 14px 14px; }
+  .ticket-tear {
+    height: 18px;
+    background:
+      radial-gradient(circle at 0 50%, var(--soft) 9px, transparent 9.5px) left / 18px 18px no-repeat,
+      radial-gradient(circle at 100% 50%, var(--soft) 9px, transparent 9.5px) right / 18px 18px no-repeat,
+      linear-gradient(#fff, #fff);
+    position: relative;
+  }
+  .ticket-tear::after {
+    content: ''; position: absolute; left: 16px; right: 16px; top: 50%;
+    border-top: 2px dashed var(--line);
+  }
+  .ticket-kicker { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 12px; }
+  .ticket-row { display: flex; justify-content: space-between; gap: 12px; }
+  .ticket-right { text-align: right; }
+  .ticket-small { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .ticket-big { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; margin-top: 2px; }
+  .ticket-place { font-size: 17px; font-weight: 600; margin-top: 2px; }
+  .ticket-left { font-size: 13.5px; color: var(--accent); margin-top: 8px; font-weight: 500; }
+  .ticket-note { display: none; }
+  .ticket-note.show { display: block; }
+
+  .hp { height: 8px; }
   .hp {
     display: flex;
-    gap: 3px;
-    padding: 2px;
+    gap: 2px;
+    padding: 1px;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 5px;
     background: #fff;
   }
   .hp-seg {
@@ -140,7 +219,6 @@
     transition: background 0.3s, opacity 0.3s, transform 0.3s;
   }
   .hp-seg.lost { background: var(--line); opacity: 0.5; transform: scaleY(0.6); }
-  .hp.hit { animation: hit 0.35s; }
   @keyframes hit {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
@@ -292,16 +370,41 @@
 
   <div id="content" style="display:none">
   <h1>Salom, <span data-field="herName"></span></h1>
-  <p>Yakunlanmay qolgan suhbatimizni tugatib qo'ymoqchi edim)</p>
+  <!-- Suhbat pufakchasi: "yozmoqda..." dan keyin matn chiqadi -->
+  <div class="chat">
+    <div class="bubble" id="bubble">
+      <span class="typing" id="typing"><i></i><i></i><i></i></span>
+      <span id="bubbleText"></span>
+    </div>
+    <div class="bubble-meta" id="bubbleMeta"></div>
+  </div>
 
   <div class="answer" id="answer">
     <div class="choices">
       <div class="col">
-        <div class="hp-spacer"></div>
         <button class="btn" id="yesBtn">Ha</button>
       </div>
       <div class="col">
-        <div class="hp" id="hp"></div>
+        <!-- Choy piyolasi: har "Yo'q"da choy kamayib, soviydi -->
+        <div class="meter" id="meter">
+          <svg class="cup" viewBox="0 0 44 40" aria-hidden="true">
+            <defs>
+              <clipPath id="cupClip"><path d="M6 12 H32 V26 a10 10 0 0 1 -10 10 H16 a10 10 0 0 1 -10 -10 Z"/></clipPath>
+            </defs>
+            <g class="steam" id="steam">
+              <path d="M13 9 q-2 -3 0 -5 q2 -2 0 -4"/>
+              <path d="M19 9 q-2 -3 0 -5 q2 -2 0 -4"/>
+              <path d="M25 9 q-2 -3 0 -5 q2 -2 0 -4"/>
+            </g>
+            <g clip-path="url(#cupClip)"><rect id="tea" class="tea" x="0" y="14" width="44" height="30"/></g>
+            <path class="cup-line" d="M6 12 H32 V26 a10 10 0 0 1 -10 10 H16 a10 10 0 0 1 -10 -10 Z"/>
+            <path class="cup-line" d="M32 16 h3 a5 5 0 0 1 0 10 h-3"/>
+          </svg>
+          <div class="meter-info">
+            <div class="meter-label"><span id="meterText">Choy issiq</span><span id="meterPct">100%</span></div>
+            <div class="hp" id="hp"></div>
+          </div>
+        </div>
         <button class="btn outline" id="noBtn">Yo'q</button>
       </div>
     </div>
@@ -339,6 +442,23 @@
   <div class="result" id="result">
     <div class="title" id="resultTitle"></div>
     <p id="resultText"></p>
+    <!-- "Ha" bo'lsa: uchrashuv chiptasi -->
+    <div class="ticket" id="ticket">
+      <div class="ticket-top">
+        <div class="ticket-kicker">Suhbat davomi · 2-qism</div>
+        <div class="ticket-row">
+          <div><div class="ticket-small">Sana</div><div class="ticket-big" id="tDate"></div></div>
+          <div class="ticket-right"><div class="ticket-small">Vaqt</div><div class="ticket-big" id="tTime"></div></div>
+        </div>
+      </div>
+      <div class="ticket-tear"></div>
+      <div class="ticket-bottom">
+        <div class="ticket-small">Joy</div>
+        <div class="ticket-place" id="tPlace"></div>
+        <div class="ticket-left" id="tLeft"></div>
+      </div>
+    </div>
+    <p class="muted ticket-note" id="ticketNote">Eslab qolish uchun ekran rasmini olib qo'yishingiz mumkin.</p>
     <div class="result-actions">
       <button class="btn outline" id="changeBtn"></button>
       <button class="btn outline" id="resendBtn">Javobni qayta yuborish</button>
@@ -451,6 +571,29 @@ track(isNewDevice
 function openContent() {
   $('gate').style.display = 'none';
   $('content').style.display = '';
+  playIntro();
+}
+
+// Kirish xabari: avval "yozmoqda...", keyin matn harfma-harf chiqadi
+const INTRO = "Yakunlanmay qolgan suhbatimizni tugatib qo'ymoqchi edim)";
+let introPlayed = false;
+function playIntro() {
+  if (introPlayed) return;
+  introPlayed = true;
+  $('answer').classList.add('waiting');
+  $('bubbleMeta').textContent = `${CONFIG.myName} yozmoqda...`;
+  setTimeout(() => {
+    $('typing').style.display = 'none';
+    let i = 0;
+    const timer = setInterval(() => {
+      $('bubbleText').textContent = INTRO.slice(0, ++i);
+      if (i >= INTRO.length) {
+        clearInterval(timer);
+        $('bubbleMeta').textContent = 'hozirgina';
+        setTimeout(() => $('answer').classList.remove('waiting'), 300);
+      }
+    }, 38);
+  }, 1500);
 }
 if (store.get('gate') === 'yes') {
   openContent(); // shu qurilmada avval tasdiqlagan — qayta so'ramaymiz
@@ -525,7 +668,7 @@ for (let t = toMin(CONFIG.timeFrom); t <= toMin(CONFIG.timeTo); t += CONFIG.time
     if (answered) return;
     document.querySelectorAll('.slot').forEach(x => x.classList.remove('selected'));
     el.classList.add('selected');
-    selectedTime = { label: `${formatDate(day)}, soat ${hm}` };
+    selectedTime = { label: `${formatDate(day)}, soat ${hm}`, hm, date: new Date(`${CONFIG.date}T${hm}`) };
     $('detailsHint').textContent = '';
     track(`🕐 Vaqt tanladi: ${hm}`);
   });
@@ -600,6 +743,19 @@ function showResult(kind, title, text) {
   lastResult = kind;
   $('resultTitle').textContent = title;
   $('resultText').textContent = text;
+  const isYes = kind === 'yes';
+  $('ticket').classList.toggle('show', isYes);
+  $('ticketNote').classList.toggle('show', isYes);
+  if (isYes) {
+    $('tDate').textContent = formatDate(selectedTime.date).replace(/, .*/, '');
+    $('tTime').textContent = selectedTime.hm;
+    $('tPlace').textContent = selectedPlace.name;
+    const diff = selectedTime.date - new Date();
+    const d = Math.floor(diff / 86400000), h = Math.floor(diff / 3600000) % 24;
+    $('tLeft').textContent = diff > 0
+      ? `Uchrashuvgacha ${d ? d + ' kun ' : ''}${h} soat qoldi · ${WEEKDAYS[selectedTime.date.getDay()]}`
+      : '';
+  }
   $('changeBtn').textContent = kind === 'no' ? "Fikrimni o'zgartirdim" : "Vaqt yoki joyni o'zgartirish";
   show('result');
 }
@@ -631,7 +787,7 @@ $('confirmBtn').addEventListener('click', () => {
     return;
   }
   const changed = lastResult !== null;
-  showResult('yes', 'Kelishdik', `${selectedTime.label}, ${selectedPlace.name}. Ko'rishguncha.`);
+  showResult('yes', 'Kelishdik', "Suhbatimizning davomi sizni kutyapti. Ko'rishguncha.");
   send(BOT_ON
     ? `🎉 ${changed ? 'YANGILANDI — ' : ''}TASDIQLADI!\nVaqt: ${selectedTime.label}\nJoy: ${selectedPlace.name}`
     : `Salom, ${CONFIG.myName}. Suhbatimizni davom ettiramiz. Vaqt: ${selectedTime.label}. Joy: ${selectedPlace.name}.`);
@@ -656,14 +812,25 @@ for (let i = 0; i < MAX_NO; i++) {
   seg.className = 'hp-seg';
   $('hp').appendChild(seg);
 }
+// Choy holati: har "Yo'q"da choy kamayadi, rangi oqaradi, bug'i yo'qoladi
+const TEA_STATES = ["Choy issiq", "Hali iliq", "Iliq", "Sovuyapti", "Ancha sovudi", "Deyarli sovuq", "Oxirgi qultum", "Choy tugadi"];
+const TEA_COLORS = ['#b5652f', '#b86a36', '#bb7340', '#be7d4d', '#c2895d', '#c6976f', '#cba584', '#cba584'];
 function updateHp(animate = true) {
   const left = MAX_NO - noCount;
   $('hp').style.setProperty('--hp-color', HP_COLORS[Math.min(noCount, HP_COLORS.length - 1)]);
   $('hp').querySelectorAll('.hp-seg').forEach((s, i) => s.classList.toggle('lost', i >= left));
+
+  // Piyoladagi choy sathi: to'la (y=14) dan bo'sh (y=36) gacha
+  $('tea').style.transform = `translateY(${22 * noCount / MAX_NO}px)`;
+  $('tea').style.setProperty('--tea', TEA_COLORS[Math.min(noCount, TEA_COLORS.length - 1)]);
+  $('steam').classList.toggle('off', noCount >= 3);
+  $('meterText').textContent = TEA_STATES[Math.min(noCount, TEA_STATES.length - 1)];
+  $('meterPct').textContent = Math.round(left / MAX_NO * 100) + '%';
+
   if (!animate) return;
-  $('hp').classList.remove('hit');
-  void $('hp').offsetWidth;
-  $('hp').classList.add('hit');
+  $('meter').classList.remove('hit');
+  void $('meter').offsetWidth;
+  $('meter').classList.add('hit');
 }
 
 // Sabab qismidan ortga qaytilsa: bitta bo'lak qoladi, keyingi "Yo'q" yana sababni ochadi
