@@ -28,6 +28,8 @@
     justify-content: center;
     padding: 28px 16px;
   }
+  .card { visibility: hidden; }
+  .card.ready { visibility: visible; }
   .card {
     width: 100%;
     max-width: 480px;
@@ -349,6 +351,12 @@
 
 <main class="card">
 
+  <!-- Kalitsiz ochilganda -->
+  <div id="locked" style="display:none">
+    <h1>Bu sahifa shaxsiy</h1>
+    <p class="muted">Uni faqat taklif egasi ocha oladi.</p>
+  </div>
+
   <!-- Kirish: kim ochganini so'rash -->
   <div class="gate" id="gate">
     <div id="gateAsk">
@@ -549,8 +557,41 @@ function deviceLabel() {
   return `${dev} · ${br}`;
 }
 
+/* ---------- Maxfiy kalit: faqat QR koddagi havola bilan ochiladi ----------
+   Kodda kalitning o'zi emas, faqat SHA-256 xeshi saqlanadi. */
+const KEY_HASH = "68ffe3b06b6beecd62c2099db6ddf96db5b1b0880662f52303f82fee550cfddf";
+let accessOk = false;
+const pending = [];
+
+async function checkKey() {
+  const k = new URLSearchParams(location.search).get('k') || store.get('k') || '';
+  if (!k || !(window.crypto && crypto.subtle)) return false;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(k));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  if (hex === KEY_HASH) { store.set('k', k); return true; }
+  return false;
+}
+
+checkKey().catch(() => false).then(ok => {
+  if (ok) {
+    accessOk = true;
+    pending.splice(0).forEach(sendTrack); // kutib turgan xabarlarni yuborish
+  } else {
+    pending.length = 0; // kalitsiz tashriflar haqida xabar yuborilmaydi
+    $('gate').style.display = 'none';
+    $('content').style.display = 'none';
+    $('locked').style.display = '';
+  }
+  document.querySelector('.card').classList.add('ready');
+});
+
 function track(text) {
   if (!BOT_ON) return;
+  if (!accessOk) { pending.push(text); return; }
+  sendTrack(text);
+}
+
+function sendTrack(text) {
   const t = new Date();
   const stamp = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}`;
   const body = new URLSearchParams({
@@ -563,9 +604,32 @@ function track(text) {
   fetch(url, { method: 'POST', body, mode: 'no-cors', keepalive: true }).catch(() => {});
 }
 
+// Avtomatik dastur (bot/skaner) belgilarini tekshirish
+function botSigns() {
+  const ua = navigator.userAgent;
+  const signs = [];
+  if (navigator.webdriver) signs.push('webdriver');
+  if (/bot|crawl|spider|headless|scan|python|curl|wget|preview|fetch|monitor/i.test(ua)) signs.push('UA');
+  if (!/iPhone|iPad|Android|Windows|Macintosh|CrOS/.test(ua)) signs.push('noma\'lum OS');
+  if (!navigator.languages || navigator.languages.length === 0) signs.push('til yo\'q');
+  return signs;
+}
+function visitorDetails() {
+  let tz = '';
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  return [
+    `Ekran: ${screen.width}×${screen.height}`,
+    `Til: ${(navigator.languages || [navigator.language]).slice(0, 3).join(', ') || '-'}`,
+    `Vaqt zonasi: ${tz || '-'}`,
+    `Qayerdan: ${document.referrer || "to'g'ridan-to'g'ri (QR yoki havola)"}`,
+    `UA: ${navigator.userAgent}`,
+  ].join('\n');
+}
+const signs = botSigns();
+const botMark = (signs.length >= 2 || signs.includes('UA') || signs.includes('webdriver')) ? `\n🤖 Ehtimol avtomatik dastur (${signs.join(', ')})` : '';
 track(isNewDevice
-  ? `🆕 YANGI QURILMA ochdi: ${deviceLabel()}`
-  : `📖 Sahifa qayta ochildi (shu qurilmada ${visitCount}-marta) · ${deviceLabel()}`);
+  ? `🆕 YANGI QURILMA ochdi: ${deviceLabel()}${botMark}\n${visitorDetails()}`
+  : `📖 Sahifa qayta ochildi (shu qurilmada ${visitCount}-marta) · ${deviceLabel()}${botMark}`);
 
 /* ---------- "Siz Sarvaramisiz?" ---------- */
 function openContent() {
