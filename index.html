@@ -146,12 +146,6 @@
   }
   .steam.off path { animation: none; opacity: 0; }
   .meter-info { flex: 1; min-width: 0; }
-  .meter-label {
-    display: flex; justify-content: space-between; gap: 6px;
-    font-size: 12px; color: var(--muted); margin-bottom: 4px; white-space: nowrap;
-  }
-  .meter-label span:first-child { overflow: hidden; text-overflow: ellipsis; }
-  #meterPct { font-variant-numeric: tabular-nums; font-weight: 600; }
 
   /* Suhbat pufakchasi */
   .chat { margin: 6px 0 4px; min-height: 76px; }
@@ -384,7 +378,6 @@
       <span class="typing" id="typing"><i></i><i></i><i></i></span>
       <span id="bubbleText"></span>
     </div>
-    <div class="bubble-meta" id="bubbleMeta"></div>
   </div>
 
   <div class="answer" id="answer">
@@ -409,7 +402,6 @@
             <path class="cup-line" d="M32 16 h3 a5 5 0 0 1 0 10 h-3"/>
           </svg>
           <div class="meter-info">
-            <div class="meter-label"><span id="meterText">Choy issiq</span><span id="meterPct">100%</span></div>
             <div class="hp" id="hp"></div>
           </div>
         </div>
@@ -639,14 +631,13 @@ function openContent() {
   playIntro();
 }
 
-// Kirish xabari: avval "yozmoqda...", keyin matn harfma-harf chiqadi
+// Kirish xabari: avval uch nuqta, keyin matn harfma-harf chiqadi
 const INTRO = "Yakunlanmay qolgan suhbatimizni tugatib qo'ymoqchi edim)";
 let introPlayed = false;
 function playIntro() {
   if (introPlayed) return;
   introPlayed = true;
   $('answer').classList.add('waiting');
-  $('bubbleMeta').textContent = `${CONFIG.myName} yozmoqda...`;
   setTimeout(() => {
     $('typing').style.display = 'none';
     let i = 0;
@@ -654,7 +645,6 @@ function playIntro() {
       $('bubbleText').textContent = INTRO.slice(0, ++i);
       if (i >= INTRO.length) {
         clearInterval(timer);
-        $('bubbleMeta').textContent = 'hozirgina';
         setTimeout(() => $('answer').classList.remove('waiting'), 300);
       }
     }, 38);
@@ -878,7 +868,6 @@ for (let i = 0; i < MAX_NO; i++) {
   $('hp').appendChild(seg);
 }
 // Choy holati: har "Yo'q"da choy kamayadi, rangi oqaradi, bug'i yo'qoladi
-const TEA_STATES = ["Choy issiq", "Hali iliq", "Iliq", "Sovuyapti", "Ancha sovudi", "Deyarli sovuq", "Oxirgi qultum", "Choy tugadi"];
 const TEA_COLORS = ['#b5652f', '#b86a36', '#bb7340', '#be7d4d', '#c2895d', '#c6976f', '#cba584', '#cba584'];
 function updateHp(animate = true) {
   const left = MAX_NO - noCount;
@@ -889,8 +878,6 @@ function updateHp(animate = true) {
   $('tea').style.transform = `translateY(${22 * noCount / MAX_NO}px)`;
   $('tea').style.setProperty('--tea', TEA_COLORS[Math.min(noCount, TEA_COLORS.length - 1)]);
   $('steam').classList.toggle('off', noCount >= 3);
-  $('meterText').textContent = TEA_STATES[Math.min(noCount, TEA_STATES.length - 1)];
-  $('meterPct').textContent = Math.round(left / MAX_NO * 100) + '%';
 
   if (!animate) return;
   $('meter').classList.remove('hit');
