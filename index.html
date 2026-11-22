@@ -158,7 +158,6 @@
     font-size: 16.5px;
     line-height: 1.55;
   }
-  .answer.waiting { opacity: 0; pointer-events: none; }
   .answer { transition: opacity 0.5s ease; }
 
   /* Uchrashuv chiptasi */
@@ -363,7 +362,7 @@
 
   <div id="content" style="display:none">
   <h1>Salom, <span data-field="herName"></span></h1>
-  <!-- Suhbat pufakchasi: matn harfma-harf chiqadi -->
+  <!-- Suhbat pufakchasi -->
   <div class="chat">
     <div class="bubble" id="bubble">
       <span id="bubbleText"></span>
@@ -621,23 +620,10 @@ function openContent() {
   playIntro();
 }
 
-// Kirish xabari: matn harfma-harf chiqadi
+// Kirish xabari: birdaniga ko'rinadi
 const INTRO = "Yakunlanmay qolgan suhbatimizni tugatib qo'ymoqchi edim)";
-let introPlayed = false;
 function playIntro() {
-  if (introPlayed) return;
-  introPlayed = true;
-  $('answer').classList.add('waiting');
-  setTimeout(() => {
-    let i = 0;
-    const timer = setInterval(() => {
-      $('bubbleText').textContent = INTRO.slice(0, ++i);
-      if (i >= INTRO.length) {
-        clearInterval(timer);
-        setTimeout(() => $('answer').classList.remove('waiting'), 300);
-      }
-    }, 38);
-  }, 300);
+  $('bubbleText').textContent = INTRO;
 }
 if (store.get('gate') === 'yes') {
   openContent(); // shu qurilmada avval tasdiqlagan — qayta so'ramaymiz
