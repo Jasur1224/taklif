@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suhbatimiz davomi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f2ec;
+    --card: #fffdfa;
+    --text: #2e2a27;
+    --muted: #857a70;
+    --accent: #9c4a52;
+    --accent-dark: #7f3840;
+    --line: #e8dfd5;
+    --soft: #f4ece4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+  }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    height: fit-content;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 10px 40px rgba(60, 40, 30, 0.07);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 1.3;
+    margin-bottom: 18px;
+  }
+  p { font-size: 16.5px; line-height: 1.7; margin-bottom: 12px; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .signature { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 18px; margin-top: 6px; }
+
+  .section-label {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 28px 0 10px;
+  }
+
+  .options { display: grid; gap: 10px; }
+  .option {
+    text-align: left;
+    font-family: inherit;
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: var(--text);
+  }
+  .option:hover { border-color: #cdbfb1; }
+  .option.selected { border-color: var(--accent); background: #fbf5f3; }
+  .radio {
+    flex: 0 0 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #cdbfb1;
+    margin-top: 2px;
+    position: relative;
+  }
+  .option.selected .radio { border-color: var(--accent); }
+  .option.selected .radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .opt-title { font-size: 16px; font-weight: 600; }
+  .opt-desc { font-size: 14px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+  .map-wrap { display: none; margin-top: 12px; }
+  .map-wrap.show { display: block; }
+  .map { width: 100%; height: 190px; border: 0; border-radius: 14px; }
+  .map-link { display: inline-block; margin-top: 8px; font-size: 14px; color: var(--accent); text-decoration: none; font-weight: 500; }
+  .map-link:hover { text-decoration: underline; }
+
+  .btn {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 14px 22px;
+    cursor: pointer;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.outline { background: transparent; color: var(--accent); }
+  .btn.outline:hover { background: var(--soft); }
+
+  .answer { margin-top: 30px; }
+  .choices { display: flex; gap: 12px; align-items: flex-end; }
+  .choices .col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .choices .btn { width: 100%; }
+
+  /* "Yo'q" ustidagi health bar */
+  .hp, .hp-spacer { height: 12px; }
+  .hp {
+    display: flex;
+    gap: 3px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+  }
+  .hp-seg {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--hp-color, #5a9e6f);
+    transition: background 0.3s, opacity 0.3s, transform 0.3s;
+  }
+  .hp-seg.lost { background: var(--line); opacity: 0.5; transform: scaleY(0.6); }
+  .hp.hit { animation: hit 0.35s; }
+  @keyframes hit {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* Vaqt oraliqlari */
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .slot {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+  }
+  .slot:hover { border-color: #cdbfb1; }
+  .slot.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .hint { min-height: 22px; font-size: 14.5px; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+
+  .result {
+    display: none;
+    margin-top: 30px;
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 20px 20px 16px;
+    animation: fade 0.4s ease;
+  }
+  .result.show { display: block; }
+  .result .title { font-family: 'Playfair Display', Georgia, serif; font-size: 21px; margin-bottom: 8px; }
+  .result .btn { margin-top: 6px; padding: 10px 16px; font-size: 14.5px; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+  .reason {
+    display: none;
+    margin-top: 30px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+    animation: fade 0.4s ease;
+  }
+  .reason.show { display: block; }
+  .reason .title { font-family: 'Playfair Display', Georgia, serif; font-size: 21px; margin-bottom: 6px; }
+  .reason .options { margin-top: 14px; }
+  .reason textarea {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    resize: vertical;
+    color: var(--text);
+    background: #fff;
+  }
+  .reason textarea:focus { outline: none; border-color: var(--accent); }
+  .reason textarea.show { display: block; }
+  .reason .btn { width: 100%; margin-top: 16px; }
+
+  .details {
+    display: none;
+    margin-top: 26px;
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    animation: fade 0.4s ease;
+  }
+  .details.show { display: block; }
+  .details .section-label:first-of-type { margin-top: 18px; }
+  .details .confirm { width: 100%; margin-top: 26px; }
+
+  .footer { margin-top: 28px; }
+
+  /* Ortga tugmasi */
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 8px 0;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .result-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .gate-choices { margin-top: 24px; }
+  .gate-choices .btn { flex: 1; }
+  #gateBack { margin-top: 10px; }
+
+  /* Hover faqat sichqonchali qurilmalarda (telefonda "yopishib" qolmasin) */
+  @media (hover: none) {
+    .btn:hover { background: var(--accent); }
+    .btn.outline:hover { background: transparent; }
+    .option:hover, .slot:hover { border-color: var(--line); }
+    .option.selected:hover, .slot.selected:hover { border-color: var(--accent); }
+  }
+
+  /* Telefon uchun */
+  html { -webkit-text-size-adjust: 100%; }
+  .btn, .slot, .option { min-height: 48px; touch-action: manipulation; }
+  .btn:active, .slot:active, .option:active { transform: scale(0.98); }
+
+  @media (max-width: 480px) {
+    body { padding: 14px 10px calc(14px + env(safe-area-inset-bottom)); }
+    .card { padding: 30px 20px; border-radius: 18px; }
+    h1 { font-size: 26px; }
+    p { font-size: 16px; }
+    .map { height: 170px; }
+    .result-actions .btn { flex: 1 1 100%; }
+    .reason textarea { font-size: 16px; } /* iPhone'da zoom bo'lmasligi uchun */
+  }
+  @media (max-width: 340px) {
+    .slots { grid-template-columns: repeat(3, 1fr); }
+    h1 { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+
+<main class="card">
+
+  <!-- Kirish: kim ochganini so'rash -->
+  <div class="gate" id="gate">
+    <div id="gateAsk">
+      <h1>Salom!</h1>
+      <p>Bu sahifa <span data-field="herName"></span> uchun.</p>
+      <p class="muted">Siz <span data-field="herName"></span>misiz?</p>
+      <div class="choices gate-choices">
+        <button class="btn" id="gateYes">Ha, menman</button>
+        <button class="btn outline" id="gateNo">Yo'q</button>
+      </div>
+    </div>
+    <div id="gateStranger" style="display:none">
+      <h1>Kechirasiz</h1>
+      <p>Bu taklif <span data-field="herName"></span> uchun mo'ljallangan.</p>
+      <p class="muted">Iltimos, uni egasiga qaytarib bering. Rahmat 🙂</p>
+      <button type="button" class="back" id="gateBack">← Xato bosdim</button>
+    </div>
+  </div>
+
+  <div id="content" style="display:none">
+  <h1>Salom, <span data-field="herName"></span></h1>
+  <p>Yakunlanmay qolgan suhbatimizni tugatib qo'ymoqchi edim)</p>
+
+  <div class="answer" id="answer">
+    <div class="choices">
+      <div class="col">
+        <div class="hp-spacer"></div>
+        <button class="btn" id="yesBtn">Ha</button>
+      </div>
+      <div class="col">
+        <div class="hp" id="hp"></div>
+        <button class="btn outline" id="noBtn">Yo'q</button>
+      </div>
+    </div>
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <div class="details" id="details">
+    <button type="button" class="back" data-back="answer">← Ortga</button>
+    <p class="muted">Vaqt va joyni o'zingiz tanlashingizni istardim.</p>
+
+    <div class="section-label">Qachon · <span id="dateText"></span></div>
+    <div class="slots" id="times"></div>
+
+    <div class="section-label">Qayerda</div>
+    <div class="options" id="places"></div>
+    <div class="map-wrap" id="mapWrap">
+      <iframe class="map" id="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Xarita"></iframe>
+      <a class="map-link" id="mapLink" target="_blank" rel="noopener">Xaritada ochish →</a>
+    </div>
+
+    <button class="btn confirm" id="confirmBtn">Tasdiqlash</button>
+    <div class="hint" id="detailsHint"></div>
+  </div>
+
+  <div class="reason" id="reason">
+    <button type="button" class="back" data-back="answer">← Ortga</button>
+    <div class="title">Sababini aytsangiz bo'ladimi?</div>
+    <p class="muted">Bu faqat men uchun — tushunib olishim uchun.</p>
+    <div class="options" id="reasons"></div>
+    <textarea id="reasonText" rows="3" placeholder="Sababini shu yerga yozing..."></textarea>
+    <button class="btn block" id="reasonSend">Yuborish</button>
+    <div class="hint" id="reasonHint"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="title" id="resultTitle"></div>
+    <p id="resultText"></p>
+    <div class="result-actions">
+      <button class="btn outline" id="changeBtn"></button>
+      <button class="btn outline" id="resendBtn">Javobni qayta yuborish</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p class="signature">— <span data-field="myName"></span></p>
+  </div>
+  </div><!-- /content -->
+</main>
+
+<script>
+/* ============================================================
+   SOZLAMALAR — faqat shu qismni o'zgartiring
+   ============================================================ */
+const CONFIG = {
+  herName: "Sarvara",                // Qizning ismi
+  myName: "Jasur",                   // Sizning ismingiz
+
+  // Sana va vaqt oralig'i (har 30 daqiqada variant chiqadi)
+  date: "2026-11-29",
+  timeFrom: "13:00",
+  timeTo: "16:00",
+  timeStep: 30,                      // daqiqa
+
+  // Joylar: name — nomi, desc — qisqa tavsif, map — xaritada qidiriladigan matn
+  places: [
+    { name: "1-joy nomi", desc: "Qisqa tavsif", map: "Amir Temur xiyoboni, Toshkent" },
+    { name: "2-joy nomi", desc: "Qisqa tavsif", map: "Tashkent City Park" },
+    { name: "3-joy nomi", desc: "Qisqa tavsif", map: "Magic City, Toshkent" },
+  ],
+
+  // Kuzatuv va javoblar Telegram bot orqali sizga keladi
+  telegramBotToken: "9260195030:AAGI0sFbJSK4HDlNWHKcGKePJWXGKji9iv8", // @elchibotbot_bot
+  telegramChatId: "976424117",       // @Jasur_Abdurahmonov
+
+  // Zaxira: bot sozlanmagan bo'lsa, javob shu messenjer orqali yuboriladi
+  telegramUsername: "",              // masalan: "jasur_uz" (@ belgisisiz)
+  whatsappPhone: "",                 // masalan: "998901234567" (+ belgisisiz)
+};
+/* ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+document.querySelectorAll('[data-field]').forEach(el => { el.textContent = CONFIG[el.dataset.field] || ''; });
+
+/* ---------- Kuzatuv: har bir harakat Telegram botga yuboriladi ---------- */
+const BOT_ON = !!(CONFIG.telegramBotToken && CONFIG.telegramChatId);
+
+// localStorage ishlamasa (masalan, ba'zi maxfiy rejimlarda) xato bermasin
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+// Har bir qurilma doimiy kod oladi — shu qurilmada qayta ochilsa ham o'sha kod
+let deviceId = store.get('deviceId');
+const isNewDevice = !deviceId;
+if (isNewDevice) {
+  deviceId = Math.random().toString(36).slice(2, 6).toUpperCase();
+  store.set('deviceId', deviceId);
+}
+const visitCount = Number(store.get('visits') || 0) + 1;
+store.set('visits', visitCount);
+const startedAt = Date.now();
+
+// Qurilma va brauzer nomi (taxminiy)
+function deviceLabel() {
+  const ua = navigator.userAgent;
+  let dev = 'Noma\'lum qurilma';
+  if (/iPhone/.test(ua)) dev = 'iPhone';
+  else if (/iPad/.test(ua)) dev = 'iPad';
+  else if (/Android/.test(ua)) {
+    const m = ua.match(/Android [\d.]+; ([^;)]+)/);
+    dev = m && m[1].trim() !== 'K' ? `Android (${m[1].trim()})` : 'Android';
+  }
+  else if (/Windows/.test(ua)) dev = 'Windows kompyuter';
+  else if (/Macintosh/.test(ua)) dev = 'Mac';
+  let br = 'brauzer';
+  if (/Telegram/i.test(ua)) br = 'Telegram ichida';
+  else if (/Instagram/.test(ua)) br = 'Instagram ichida';
+  else if (/SamsungBrowser/.test(ua)) br = 'Samsung Internet';
+  else if (/YaBrowser/.test(ua)) br = 'Yandex';
+  else if (/Edg\//.test(ua)) br = 'Edge';
+  else if (/CriOS|Chrome/.test(ua)) br = 'Chrome';
+  else if (/FxiOS|Firefox/.test(ua)) br = 'Firefox';
+  else if (/Safari/.test(ua)) br = 'Safari';
+  return `${dev} · ${br}`;
+}
+
+function track(text) {
+  if (!BOT_ON) return;
+  const t = new Date();
+  const stamp = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}`;
+  const body = new URLSearchParams({
+    chat_id: CONFIG.telegramChatId,
+    text: `[📱${deviceId} · ${stamp}] ${text}`,
+    disable_notification: 'false',
+  });
+  const url = `https://api.telegram.org/bot${CONFIG.telegramBotToken}/sendMessage`;
+  if (navigator.sendBeacon && navigator.sendBeacon(url, body)) return;
+  fetch(url, { method: 'POST', body, mode: 'no-cors', keepalive: true }).catch(() => {});
+}
+
+track(isNewDevice
+  ? `🆕 YANGI QURILMA ochdi: ${deviceLabel()}`
+  : `📖 Sahifa qayta ochildi (shu qurilmada ${visitCount}-marta) · ${deviceLabel()}`);
+
+/* ---------- "Siz Sarvaramisiz?" ---------- */
+function openContent() {
+  $('gate').style.display = 'none';
+  $('content').style.display = '';
+}
+if (store.get('gate') === 'yes') {
+  openContent(); // shu qurilmada avval tasdiqlagan — qayta so'ramaymiz
+}
+$('gateYes').addEventListener('click', () => {
+  store.set('gate', 'yes');
+  track(`🙋 "Ha, menman" — o'zini ${CONFIG.herName} deb tasdiqladi`);
+  openContent();
+});
+$('gateNo').addEventListener('click', () => {
+  track(`🚫 BEGONA: "Men ${CONFIG.herName} emasman" dedi · ${deviceLabel()}`);
+  $('gateAsk').style.display = 'none';
+  $('gateStranger').style.display = '';
+});
+$('gateBack').addEventListener('click', () => {
+  track(`↩️ "Xato bosdim" — savolga qaytdi`);
+  $('gateStranger').style.display = 'none';
+  $('gateAsk').style.display = '';
+});
+
+// Sahifadan chiqib ketsa yoki qaytsa
+document.addEventListener('visibilitychange', () => {
+  const secs = Math.round((Date.now() - startedAt) / 1000);
+  if (document.visibilityState === 'hidden') track(`🚪 Sahifadan chiqdi (${secs} soniya o'tgan)`);
+  else track('👀 Sahifaga qaytdi');
+});
+
+const MONTHS = ['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+const WEEKDAYS = ['yakshanba','dushanba','seshanba','chorshanba','payshanba','juma','shanba'];
+
+function formatDate(d) {
+  return `${d.getDate()}-${MONTHS[d.getMonth()]}, ${WEEKDAYS[d.getDay()]}`;
+}
+
+// Tanlanadigan variantlar ro'yxatini yasash
+function buildOptions(containerId, items, onSelect) {
+  const container = $(containerId);
+  items.forEach(item => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'option';
+    el.innerHTML = `<span class="radio"></span><span><div class="opt-title"></div><div class="opt-desc"></div></span>`;
+    el.querySelector('.opt-title').textContent = item.title;
+    if (item.desc) el.querySelector('.opt-desc').textContent = item.desc;
+    else el.querySelector('.opt-desc').remove();
+    el.addEventListener('click', () => {
+      if (answered) return;
+      container.querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      onSelect(item);
+      $('detailsHint').textContent = '';
+    });
+    container.appendChild(el);
+  });
+}
+
+let selectedTime = null;
+let selectedPlace = null;
+let answered = false;
+
+// Vaqt oraliqlari
+const day = new Date(CONFIG.date + 'T00:00');
+$('dateText').textContent = formatDate(day);
+const toMin = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+for (let t = toMin(CONFIG.timeFrom); t <= toMin(CONFIG.timeTo); t += CONFIG.timeStep) {
+  const hm = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'slot';
+  el.textContent = hm;
+  el.addEventListener('click', () => {
+    if (answered) return;
+    document.querySelectorAll('.slot').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTime = { label: `${formatDate(day)}, soat ${hm}` };
+    $('detailsHint').textContent = '';
+    track(`🕐 Vaqt tanladi: ${hm}`);
+  });
+  $('times').appendChild(el);
+}
+
+const placeItems = CONFIG.places.map(p => ({ ...p, title: p.name }));
+buildOptions('places', placeItems, item => {
+  selectedPlace = item;
+  const q = encodeURIComponent(item.map || item.name);
+  $('map').src = `https://maps.google.com/maps?q=${q}&z=15&output=embed`;
+  $('mapLink').href = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  $('mapWrap').classList.add('show');
+  track(`📍 Joy tanladi: ${item.name}`);
+});
+$('mapLink').addEventListener('click', () => track(`🗺️ Xaritani ochdi: ${selectedPlace ? selectedPlace.name : ''}`));
+
+/* ---------- Qismlar orasida o'tish (ortga qaytish bilan) ---------- */
+const PANELS = ['answer', 'details', 'reason', 'result'];
+let current = 'answer';
+
+function show(name, push = true) {
+  PANELS.forEach(p => {
+    const el = $(p);
+    if (p === 'answer') el.style.display = name === p ? '' : 'none';
+    else el.classList.toggle('show', name === p);
+  });
+  answered = name === 'result';
+  if (push && name !== current) history.pushState({ panel: name }, '');
+  current = name;
+  const target = name === 'answer' ? document.body : $(name);
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+history.replaceState({ panel: 'answer' }, '');
+
+// Telefondagi "orqaga" tugmasi
+window.addEventListener('popstate', e => {
+  const to = (e.state && e.state.panel) || 'answer';
+  if (to === 'answer' && current === 'reason') prepareAfterReasonBack();
+  track(`↩️ Orqaga qaytdi (${panelName(current)} → ${panelName(to)})`);
+  show(to, false);
+});
+
+function panelName(p) {
+  return { answer: 'Ha/Yo\'q', details: 'vaqt va joy', reason: 'sabab', result: 'natija' }[p];
+}
+
+// Sahifadagi "← Ortga" tugmalari
+document.querySelectorAll('[data-back]').forEach(b => {
+  b.addEventListener('click', () => {
+    if (current === 'reason') prepareAfterReasonBack();
+    track(`↩️ "Ortga" bosdi (${panelName(current)} → ${panelName(b.dataset.back)})`);
+    show(b.dataset.back);
+  });
+});
+
+// Yakuniy javobni yuborish
+let lastMsg = '';
+let lastResult = null; // 'yes' | 'no'
+function send(msg) {
+  lastMsg = msg;
+  if (BOT_ON) { track(msg); return; }
+  let url = '';
+  if (CONFIG.whatsappPhone) url = `https://wa.me/${CONFIG.whatsappPhone}?text=${encodeURIComponent(msg)}`;
+  else if (CONFIG.telegramUsername) url = `https://t.me/${CONFIG.telegramUsername}?text=${encodeURIComponent(msg)}`;
+  if (url) window.open(url, '_blank');
+}
+$('resendBtn').addEventListener('click', () => send(lastMsg));
+if (BOT_ON) $('resendBtn').style.display = 'none';
+
+function showResult(kind, title, text) {
+  lastResult = kind;
+  $('resultTitle').textContent = title;
+  $('resultText').textContent = text;
+  $('changeBtn').textContent = kind === 'no' ? "Fikrimni o'zgartirdim" : "Vaqt yoki joyni o'zgartirish";
+  show('result');
+}
+
+// Natijadan keyin fikrni o'zgartirish
+$('changeBtn').addEventListener('click', () => {
+  if (lastResult === 'no') {
+    track(`🔄 FIKRINI O'ZGARTIRDI — rad javobidan keyin "Ha" tomonga o'tdi`);
+  } else {
+    track(`🔄 Vaqt yoki joyni o'zgartirmoqchi`);
+  }
+  $('detailsHint').textContent = '';
+  show('details');
+});
+
+// "Ha" — vaqt va joy tanlash ochiladi
+$('yesBtn').addEventListener('click', () => {
+  track(`✅ "Ha" bosildi${noCount ? ` (oldin ${noCount} marta "Yo'q" bosgan)` : ''}`);
+  show('details');
+});
+
+// "Tasdiqlash"
+$('confirmBtn').addEventListener('click', () => {
+  if (!selectedTime || !selectedPlace) {
+    $('detailsHint').textContent = !selectedTime && !selectedPlace
+      ? "Avval vaqt va joyni tanlang."
+      : !selectedTime ? "Vaqtni ham tanlang." : "Joyni ham tanlang.";
+    track(`⚠️ Tasdiqlashni bosdi, lekin ${!selectedTime && !selectedPlace ? 'vaqt va joy' : !selectedTime ? 'vaqt' : 'joy'} tanlanmagan`);
+    return;
+  }
+  const changed = lastResult !== null;
+  showResult('yes', 'Kelishdik', `${selectedTime.label}, ${selectedPlace.name}. Ko'rishguncha.`);
+  send(BOT_ON
+    ? `🎉 ${changed ? 'YANGILANDI — ' : ''}TASDIQLADI!\nVaqt: ${selectedTime.label}\nJoy: ${selectedPlace.name}`
+    : `Salom, ${CONFIG.myName}. Suhbatimizni davom ettiramiz. Vaqt: ${selectedTime.label}. Joy: ${selectedPlace.name}.`);
+});
+
+// "Yo'q": 7 marta bosilgach rad javobi qabul qilinadi
+const MAX_NO = 7;
+const hints = [
+  "Balki yana bir bor o'ylab ko'rarsiz?",
+  "Bu turmushga chiqish taklifi emas, shunchaki bir-birimizni yaxshiroq bilish uchun, xolos. Hech kim olib qochib ketmaydi, majburlab turmushga ham berib yubormaydi)",
+  "O'shanda gapimiz yakunlanmagandi.",
+  "Vaqt va joyni o'zingiz tanlaysiz.",
+  "Istalgan payt ketishingiz mumkin.",
+  "Qaroringiz qat'iy bo'lsa, yana bir marta bosing — hurmat qilaman.",
+];
+let noCount = 0;
+
+// Health bar: har "Yo'q" bosilganda bitta bo'lak kamayadi
+const HP_COLORS = ['#5a9e6f', '#5a9e6f', '#8fa956', '#c9a646', '#d98a3d', '#d4693a', '#c0453a'];
+for (let i = 0; i < MAX_NO; i++) {
+  const seg = document.createElement('div');
+  seg.className = 'hp-seg';
+  $('hp').appendChild(seg);
+}
+function updateHp(animate = true) {
+  const left = MAX_NO - noCount;
+  $('hp').style.setProperty('--hp-color', HP_COLORS[Math.min(noCount, HP_COLORS.length - 1)]);
+  $('hp').querySelectorAll('.hp-seg').forEach((s, i) => s.classList.toggle('lost', i >= left));
+  if (!animate) return;
+  $('hp').classList.remove('hit');
+  void $('hp').offsetWidth;
+  $('hp').classList.add('hit');
+}
+
+// Sabab qismidan ortga qaytilsa: bitta bo'lak qoladi, keyingi "Yo'q" yana sababni ochadi
+function prepareAfterReasonBack() {
+  noCount = MAX_NO - 1;
+  updateHp(false);
+  $('hint').textContent = hints[hints.length - 1];
+}
+
+$('noBtn').addEventListener('click', () => {
+  noCount++;
+  updateHp();
+  track(`❌ "Yo'q" bosildi (${noCount}/${MAX_NO})`);
+  if (noCount >= MAX_NO) {
+    show('reason'); // Oxirgi "Yo'q"dan oldin sababini so'raymiz
+    return;
+  }
+  $('hint').textContent = hints[noCount - 1];
+});
+
+// Rad etish sababi
+const REASONS = [
+  { title: "Hozir boshqa inson bilan munosabatdaman", other: false },
+  { title: "Shunchaki yoqmadi", other: false },
+  { title: "Boshqa sabab", other: true },
+];
+let selectedReason = null;
+REASONS.forEach(r => {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'option';
+  el.innerHTML = `<span class="radio"></span><span><div class="opt-title"></div></span>`;
+  el.querySelector('.opt-title').textContent = r.title;
+  el.addEventListener('click', () => {
+    $('reasons').querySelectorAll('.option').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedReason = r;
+    $('reasonText').classList.toggle('show', r.other);
+    if (r.other) $('reasonText').focus();
+    $('reasonHint').textContent = '';
+    track(`💬 Sabab variantini tanladi: ${r.title}`);
+  });
+  $('reasons').appendChild(el);
+});
+
+$('reasonSend').addEventListener('click', () => {
+  if (!selectedReason) { $('reasonHint').textContent = "Bittasini tanlang."; return; }
+  let reasonStr = selectedReason.title;
+  if (selectedReason.other) {
+    const txt = $('reasonText').value.trim();
+    if (!txt) { $('reasonHint').textContent = "Sababini qisqacha yozib qo'ying."; return; }
+    reasonStr = txt;
+  }
+  const wasYes = lastResult === 'yes';
+  showResult('no', 'Tushundim', "Ochiq javobingiz uchun rahmat. Qaroringizni hurmat qilaman.");
+  send(BOT_ON
+    ? `🛑 ${wasYes ? 'FIKRINI O\'ZGARTIRDI — ' : ''}RAD ETDI\nSabab: ${reasonStr}`
+    : `Salom, ${CONFIG.myName}. Taklifingiz uchun rahmat, lekin bu safar yo'q.\nSabab: ${reasonStr}`);
+});
+</script>
+</body>
+</html>
